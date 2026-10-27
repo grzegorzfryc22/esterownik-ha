@@ -1,0 +1,16 @@
+# Zrzuty ze sterowników — zawierają dane logowania (auth_*). Nigdy nie commitować.
+dump/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Edytory / system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
