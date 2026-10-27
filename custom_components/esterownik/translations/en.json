@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "eSterownik controller",
+        "description": "Enter the local IP address of the controller (Pello, eCoal) and the credentials of its web panel.",
+        "data": {
+          "host": "Controller IP address",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Change address or credentials",
+        "data": {
+          "host": "Controller IP address",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate",
+        "description": "The controller rejected the credentials. Enter the current username and password.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect, or the device is not an eSterownik controller.",
+      "invalid_auth": "Invalid username or password."
+    },
+    "abort": {
+      "already_configured": "This controller is already configured.",
+      "reauth_successful": "Credentials updated.",
+      "reconfigure_successful": "Configuration updated.",
+      "wrong_device": "A different controller answers at this address."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    }
+  },
+  "services": {
+    "add_fuel": {
+      "name": "Add fuel",
+      "description": "Records a refill in the controller: the hopper is treated as full and the consumption estimate restarts.",
+      "fields": {
+        "amount": {
+          "name": "Amount",
+          "description": "Amount of fuel added in kilograms (range depends on the controller)."
+        },
+        "config_entry_id": {
+          "name": "Controller",
+          "description": "Required only with more than one controller."
+        }
+      }
+    }
+  }
+}
