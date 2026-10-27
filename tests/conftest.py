@@ -58,3 +58,23 @@ def entry(hass) -> MockConfigEntry:
     )
     entry.add_to_hass(hass)
     return entry
+
+
+@pytest.fixture
+def mock_ecoal(aioclient_mock):
+    aioclient_mock.get(f"http://{HOST}/info.cgi", text=fixture("ecoal", "info.xml"))
+    aioclient_mock.get(f"http://{HOST}/config/hardware.xml", text=fixture("ecoal", "hardware.xml"))
+    aioclient_mock.get(f"http://{HOST}/syncvalues.cgi", text=fixture("ecoal", "syncvalues.txt"))
+    return aioclient_mock
+
+
+@pytest.fixture
+def entry_ecoal(hass) -> MockConfigEntry:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="eCoal",
+        unique_id="112233445566",
+        data={"host": HOST, "username": "root", "password": "secret"},
+    )
+    entry.add_to_hass(hass)
+    return entry

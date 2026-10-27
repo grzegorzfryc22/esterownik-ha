@@ -127,7 +127,7 @@ ENABLED = re.compile(
     r"^(kot_tzad|cwu_tzad|cwu_state|zima_lato|tryb_auto|tank_tzad|pog_en"
     r"|ob\d_tzad|ob\d_pok_(lo|norm|hi)|ob\d_pog_en"
     r"|tzew_value|twew_value|fuel_level|time_to_empty|next_fuel_time|add_fuel|add_fuel_time"
-    r"|pl_status|tryb_auto_state|kot_status|ob\d_zaw4d_pos|act_dm_speed|mpl_dm_rpm|pl_tfire"
+    r"|pl_status|tryb_auto_state|kot_status|stats_pwr|ob\d_zaw4d_pos|act_dm_speed|mpl_dm_rpm|pl_tfire"
     r"|out_pomp1|out_pomp2|out_cwu|out_pod|out_dm|out_zaw4d|out_miesz|out_tank"
     r"|cmd_ackalarm)$"
 )
@@ -161,6 +161,8 @@ ICONS: dict[str, str] = {
     "mpl_dm_rpm": "mdi:fan",
     "cmd_ackalarm": "mdi:alarm-light-off",
     "pl_tfire": "mdi:counter",
+    "kot_status": "mdi:fire-circle",
+    "stats_pwr": "mdi:lightning-bolt",
 }
 
 # Nazwy nadpisane, gdy słownik ma nazwy zbyt ogólne lub powtórzone.
@@ -175,10 +177,16 @@ NAMES: dict[str, dict[str, str]] = {
     "add_fuel": {"pl": "Ostatni zasyp", "en": "Last refuel amount"},
     "tzew_act": {"pl": "Temperatura zewnętrzna (aktywna)", "en": "Outdoor temperature (active)"},
 }
+# Zadana obiegu: "za zaworem", gdy obieg ma zawór 4D, inaczej obieg bezpośredni.
+VALVE_NAMES: dict[str, dict[str, str]] = {}
 for _n in range(1, 7):
-    NAMES[f"ob{_n}_tzad"] = {
+    VALVE_NAMES[f"ob{_n}_tzad"] = {
         "pl": f"Temperatura zadana za zaworem CO{_n}",
         "en": f"CH{_n} valve set temperature",
+    }
+    NAMES[f"ob{_n}_tzad"] = {
+        "pl": f"Temperatura zadana obiegu CO{_n}",
+        "en": f"CH{_n} set temperature",
     }
 
 # Jednostki słownika -> jednostka HA, klasa urządzenia sensora, klasa urządzenia number.
@@ -264,7 +272,10 @@ def _spec(
     unit, sensor_class, number_class = UNITS.get(unit_text, (unit_text or None, None, None))
     options = {value: pick(texts, language) for value, texts in register.options.items()}
     group = pick(register.group, language)
-    name = pick(NAMES.get(tid, register.name), language) or tid
+    names = NAMES.get(tid, register.name)
+    if tid in VALVE_NAMES and _group_key(register) == "4-way valve":
+        names = VALVE_NAMES[tid]
+    name = pick(names, language) or tid
     has_value = tid in values and values[tid] != ""
     curated = bool(ENABLED.match(tid))
     base = {

@@ -4,8 +4,9 @@ Lokalna integracja Home Assistant dla sterowników kotłów **eSterownik.pl** (E
 **Pello** (kotły pelletowe) i **eCoal** (kotły węglowe). Działa bez chmury: łączy się
 bezpośrednio ze stroną WWW sterownika w sieci lokalnej.
 
-> Wsparcie eCoal jest na razie **eksperymentalne** — integracja korzysta z tego samego API
-> co Pello, ale nie była jeszcze testowana na każdym modelu.
+> Przetestowane na zrzutach z prawdziwych sterowników: **Pello v3.5** (oprogramowanie 1.1.39.4)
+> i **eCoal v4.0** (oprogramowanie 1.1.36.14). Inne modele i wersje powinny działać, jeśli
+> udostępniają `config/hardware.xml` i `syncvalues.cgi` — zgłoszenia mile widziane.
 
 ## Jak to działa
 
@@ -26,7 +27,8 @@ tworzy encje — dlatego obsługuje różne modele bez ręcznego dopisywania rej
 
 Najważniejsze encje są włączone od razu. Pozostałe rejestry (parametry, liczniki,
 diagnostyka) są tworzone jako **wyłączone** — włączysz je w ustawieniach urządzenia.
-Obiegi CO, bufor i moduły, których nie masz zainstalowanych, są pomijane.
+Obiegi CO, bufor i moduły, których nie masz zainstalowanych, są pomijane. Obieg z zaworem 4D
+ma nastawę „Temperatura zadana za zaworem COn”, a obieg bezpośredni — „Temperatura zadana obiegu COn”.
 
 ## Bezpieczeństwo zapisu
 

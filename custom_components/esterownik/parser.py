@@ -58,7 +58,7 @@ def parse_info(text: str) -> ControllerInfo:
         company=hardware.get("company", ""),
         mac=mac,
         serial=hardware.get("sn", ""),
-        name=hardware.get("device_name", ""),
+        name=unquote(hardware.get("device_name", "")),
     )
 
 
