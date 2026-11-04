@@ -94,6 +94,10 @@ WRITE_BLOCKED = re.compile(
     r"|_pl_wyg$|_pump_pok$|_pomp_(on|off)$"
 )
 
+# Pojedyncze nastawy spoza grup użytkowych, które bezpiecznie zmieniać z HA
+# (ochrona powrotu: przełączana np. przy zmianie Zima/Lato).
+WRITE_EXTRA = frozenset({"ochr_pow", "tryb_ochr_pow", "tpow_min"})
+
 # Polecenia dostępne jako przyciski. Restart i formatowanie karty SD są pomijane.
 ALLOWED_COMMANDS = frozenset({"cmd_ackalarm"})
 
@@ -129,6 +133,7 @@ ENABLED = re.compile(
     r"|tzew_value|twew_value|fuel_level|time_to_empty|next_fuel_time|add_fuel|add_fuel_time"
     r"|pl_status|tryb_auto_state|kot_status|stats_pwr|ob\d_zaw4d_pos|act_dm_speed|mpl_dm_rpm|pl_tfire"
     r"|out_pomp1|out_pomp2|out_cwu|out_pod|out_dm|out_zaw4d|out_miesz|out_tank"
+    r"|ochr_pow|tryb_ochr_pow|tpow_min"
     r"|cmd_ackalarm)$"
 )
 
@@ -150,6 +155,9 @@ ICONS: dict[str, str] = {
     "pl_fuel_flow": "mdi:weight",
     "tryb_auto": "mdi:state-machine",
     "tryb_auto_state": "mdi:state-machine",
+    "ochr_pow": "mdi:shield-sync",
+    "tryb_ochr_pow": "mdi:shield-sync-outline",
+    "tpow_min": "mdi:thermometer-chevron-down",
     "zima_lato": "mdi:theme-light-dark",
     "zima_lato_state": "mdi:theme-light-dark",
     "cwu_state": "mdi:water-boiler",
@@ -176,7 +184,26 @@ NAMES: dict[str, dict[str, str]] = {
     "time_to_empty": {"pl": "Czas do opróżnienia zasobnika", "en": "Time to empty hopper"},
     "add_fuel": {"pl": "Ostatni zasyp", "en": "Last refuel amount"},
     "tzew_act": {"pl": "Temperatura zewnętrzna (aktywna)", "en": "Outdoor temperature (active)"},
+    "pl_flame_b": {"pl": "Płomień wykryty", "en": "Flame detected"},
+    "tryb_ochr_pow": {"pl": "Tryb aktywacji ochrony powrotu", "en": "Return protection activation"},
 }
+
+# Literówki w etykietach opcji słownika.
+OPTION_FIXES: dict[str, str] = {"Wyłaczona": "Wyłączona"}
+
+# Rejestry, które słownik oznacza jako nieużywane.
+UNUSED_NAMES = frozenset({"not use", "not used"})
+
+# "-10°C" / "+10°C" znikają z entity_id (pog_krzyw1 i pog_krzyw2 dawały ten sam
+# identyfikator), więc znak zapisujemy słownie.
+_SIGNED_TEMP = re.compile(r"(?<![\w.])([+-])(\d+(?:[.,]\d+)?)\s?°C")
+
+
+def _sign_words(name: str) -> str:
+    words = {"-": "minus", "+": "plus"}
+    return _SIGNED_TEMP.sub(lambda m: f"{words[m.group(1)]} {m.group(2)}°C", name)
+
+
 # Zadana obiegu: "za zaworem", gdy obieg ma zawór 4D, inaczej obieg bezpośredni.
 VALVE_NAMES: dict[str, dict[str, str]] = {}
 for _n in range(1, 7):
@@ -247,6 +274,8 @@ def _unused(register: RegisterDef, values: dict[str, str]) -> bool:
 
 
 def _can_write(register: RegisterDef, level: int) -> bool:
+    if register.tid in WRITE_EXTRA:
+        return register.writable(level)
     return (
         register.writable(level)
         and _group_key(register) in WRITE_GROUPS
@@ -270,12 +299,17 @@ def _spec(
     rtype = register.type
     unit_text = pick(register.unit, language)
     unit, sensor_class, number_class = UNITS.get(unit_text, (unit_text or None, None, None))
-    options = {value: pick(texts, language) for value, texts in register.options.items()}
+    options = {}
+    for value, texts in register.options.items():
+        label = pick(texts, language)
+        options[value] = OPTION_FIXES.get(label, label)
     group = pick(register.group, language)
     names = NAMES.get(tid, register.name)
     if tid in VALVE_NAMES and _group_key(register) == "4-way valve":
         names = VALVE_NAMES[tid]
-    name = pick(names, language) or tid
+    name = _sign_words(pick(names, language) or tid)
+    if name.strip().lower() in UNUSED_NAMES:
+        return None
     has_value = tid in values and values[tid] != ""
     curated = bool(ENABLED.match(tid))
     base = {

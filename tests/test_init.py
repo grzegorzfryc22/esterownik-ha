@@ -132,3 +132,19 @@ async def test_english_names(hass, entry, mock_pello):
     state = hass.states.get(_eid(hass, "select", "zima_lato"))
     assert state.state == "Winter"
     assert state.attributes["friendly_name"] == "pello Winter/Summer Mode"
+
+
+async def test_entity_moved_to_new_platform_is_replaced(hass, entry, mock_pello):
+    """Po odblokowaniu zapisu stara encja sensor nie zostaje jako niedostępna."""
+    registry = er.async_get(hass)
+    old = registry.async_get_or_create(
+        "sensor", DOMAIN, "aabbccddeeff_0_ochr_pow", config_entry=entry
+    )
+    keep = registry.async_get_or_create(
+        "sensor", DOMAIN, "aabbccddeeff_0_t1_value", config_entry=entry
+    )
+    await _setup(hass, entry)
+    assert registry.async_get(old.entity_id) is None
+    assert registry.async_get(keep.entity_id) is not None
+    assert hass.states.get(_eid(hass, "select", "ochr_pow")) is not None
+    assert _eid(hass, "number", "tpow_min") is not None

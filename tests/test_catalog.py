@@ -57,3 +57,35 @@ def test_secrets_and_unused_features_hidden():
 def test_names_are_unique():
     names = [spec.name for spec in _specs().values()]
     assert len(names) == len(set(names))
+
+
+def test_return_protection_is_writable():
+    specs = _specs()
+    ochr = specs["ochr_pow"]
+    assert ochr.platform is Platform.SELECT and ochr.enabled
+    assert ochr.options == {
+        "0": "Pompa mieszająca",
+        "1": "Pompa CWU",
+        "2": "Zawór 4D",
+        "3": "Wyłączona",  # literówka "Wyłaczona" w słowniku sterownika
+    }
+    tryb = specs["tryb_ochr_pow"]
+    assert tryb.platform is Platform.SELECT and tryb.enabled
+    assert tryb.options["0"] == "Pompy CO i palnik"
+    tpow = specs["tpow_min"]
+    assert tpow.platform is Platform.NUMBER and tpow.enabled
+    assert (tpow.minimum, tpow.maximum, tpow.step) == (35, 60, 1)
+    # inne parametry z grupy "Zaawansowane" zostają tylko do odczytu
+    assert specs["pomp_ton"].platform is Platform.SENSOR
+
+
+def test_names_are_unique_and_readable():
+    specs = _specs()
+    assert specs["pog_krzyw1"].name == "Krzywa grzania - temp. kotła dla minus 10°C"
+    assert specs["pog_krzyw2"].name == "Krzywa grzania - temp. kotła dla plus 10°C"
+    assert specs["ob1_pog_krzyw1"].name == "Krzywa grzania - temp. dla minus 10°C"
+    assert specs["pl_flame_b"].name == "Płomień wykryty"
+    assert specs["pl_flame"].name == "Płomień"
+    assert "tpod_value" not in specs  # "not use" w słowniku
+    names = [spec.name for spec in specs.values()]
+    assert len(names) == len(set(names))
