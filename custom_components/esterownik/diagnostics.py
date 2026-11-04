@@ -20,11 +20,15 @@ TO_REDACT = {
     "serial",
     "device_sn",
     "device_id",
+    "device_name",
+    "device_location",
     "eth_mac",
     "eth_ip",
     "eth_ip_ro",
     "eth_gate",
     "eth_gate_ro",
+    "eth_mask",
+    "eth_mask_ro",
 }
 
 
