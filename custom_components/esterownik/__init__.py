@@ -8,6 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .catalog import build_specs
@@ -77,10 +78,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: EsterownikConfigEntry) -
         (hass.config.language or "pl").split("-")[0],
     )
     entry.runtime_data = coordinator
+    _remove_moved_entities(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
+
+
+def _remove_moved_entities(
+    hass: HomeAssistant, entry: EsterownikConfigEntry, coordinator: EsterownikCoordinator
+) -> None:
+    """Usuwa encje rejestru, które zmieniły platformę (np. sensor -> select po
+    odblokowaniu zapisu). Inaczej stara encja zostaje jako niedostępna."""
+    registry = er.async_get(hass)
+    platforms = {
+        f"{coordinator.info.mac}_{spec.vid}_{spec.tid}": str(spec.platform)
+        for spec in coordinator.specs
+    }
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        platform = platforms.get(entity.unique_id)
+        if platform is not None and entity.domain != platform:
+            registry.async_remove(entity.entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EsterownikConfigEntry) -> bool:
