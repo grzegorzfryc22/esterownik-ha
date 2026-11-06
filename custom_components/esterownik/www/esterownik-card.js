@@ -3,7 +3,7 @@
  * Nieoficjalny projekt, niezwiązany z producentem sterowników.
  * Wariant: Pello 3.5
  */
-const EC_VERSION = '0.2.0';
+const EC_VERSION = '0.2.1';
 
 const EC_DEFAULT_ENTITIES = {
   status: 'sensor.pello_status_pracy',
@@ -823,15 +823,30 @@ class EsterownikPelloCardEditor extends HTMLElement {
     this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: cfg }, bubbles: true, composed: true }));
   }
 }
-if (!customElements.get('esterownik-pello-card-editor')) customElements.define('esterownik-pello-card-editor', EsterownikPelloCardEditor);
-
-if (!customElements.get('esterownik-pello-card')) customElements.define('esterownik-pello-card', EsterownikPelloCard);
-if (!customElements.get('esterownik-pello-mini-card')) customElements.define('esterownik-pello-mini-card', EsterownikPelloMiniCard);
-window.customCards = window.customCards || [];
-if (!window.customCards.find((c) => c.type === 'esterownik-pello-card')) {
-  window.customCards.push(
-    { type: 'esterownik-pello-card', name: 'Esterownik — Pello (schemat)', description: 'Schemat kotłowni Pello 3.5 z podglądem i sterowaniem', preview: false },
-    { type: 'esterownik-pello-mini-card', name: 'Esterownik — Pello (status)', description: 'Kompaktowy status pieca Pello', preview: false },
-  );
+function ecDefineAll() {
+  const def = (tag, cls) => { if (!customElements.get(tag)) customElements.define(tag, cls); };
+  def('esterownik-pello-card-editor', EsterownikPelloCardEditor);
+  def('esterownik-pello-card', EsterownikPelloCard);
+  def('esterownik-pello-mini-card', EsterownikPelloMiniCard);
+  window.customCards = window.customCards || [];
+  if (!window.customCards.find((c) => c.type === 'esterownik-pello-card')) {
+    window.customCards.push(
+      { type: 'esterownik-pello-card', name: 'Esterownik — Pello (schemat)', description: 'Schemat kotłowni Pello 3.5 z podglądem i sterowaniem', preview: false },
+      { type: 'esterownik-pello-mini-card', name: 'Esterownik — Pello (status)', description: 'Kompaktowy status pieca Pello', preview: false },
+    );
+  }
+  console.info(`%c ESTEROWNIK-CARD %c ${EC_VERSION} `, 'background:#1f6fb8;color:#fff', 'background:#e0262b;color:#fff');
 }
-console.info(`%c ESTEROWNIK-CARD %c ${EC_VERSION} `, 'background:#1f6fb8;color:#fff', 'background:#e0262b;color:#fff');
+
+// HA podmienia rejestr komponentów (customElements) podczas startu aplikacji.
+// Plik wczytany z pamięci podręcznej potrafi wykonać się wcześniej i zarejestrować
+// kartę w starym rejestrze, której potem HA "nie widzi". Dlatego rejestrujemy
+// karty dopiero, gdy aplikacja HA jest gotowa.
+if (document.querySelector('home-assistant') && !customElements.get('home-assistant')) {
+  Promise.race([
+    customElements.whenDefined('home-assistant'),
+    new Promise((resolve) => setTimeout(resolve, 15000)),
+  ]).then(ecDefineAll);
+} else {
+  ecDefineAll();
+}

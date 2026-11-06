@@ -68,4 +68,6 @@ async def test_card_file_is_bundled():
     card = Path(integration.__file__).parent / "www" / "esterownik-card.js"
     text = card.read_text(encoding="utf-8")
     assert "esterownik/card_entities" in text
-    assert "customElements.define('esterownik-pello-card'" in text
+    assert "def('esterownik-pello-card', EsterownikPelloCard)" in text
+    # Rejestracja dopiero po starcie aplikacji HA (podmiana rejestru komponentów).
+    assert "customElements.whenDefined('home-assistant')" in text
