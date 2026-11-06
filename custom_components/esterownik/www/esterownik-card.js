@@ -640,7 +640,7 @@ ha-card.ciemny{--ec-bg:#1c1c1c;--ec-fg:#e8e8e8;--ec-muted:#a8a8a8;--ec-line:#4a4
 `;
 class EsterownikPelloMiniCard extends EsterownikBase {
   static getStubConfig(hass) { const d = ecFindDevice(hass); return d ? { device_id: d } : {}; }
-  static async getConfigElement() { await ecEnsureForm(); return document.createElement('esterownik-pello-card-editor'); }
+  static async getConfigElement() { await ecEnsureForm(); const ed = document.createElement('esterownik-pello-card-editor'); ed.mini = true; return ed; }
   setConfig(config) { this._initConfig(config); this._built = false; if (this._hass) { this._build(); this._update(); } }
   set hass(h) { this._hass = h; if (!this._cfg) return; this._ensureDevice(); if (!this._built) this._build(); this._update(); if (this._big) this._big.hass = h; }
   getCardSize() { return 2; }
@@ -733,6 +733,10 @@ const EC_SCHEMA = [
     ecF('t_wewn', 'temp'), ecF('zad_wewn', 'temp'), ecF('wewn_komfortowa', 'number'), ecF('wewn_normalna', 'number'), ecF('wewn_niska', 'number'),
   ] },
 ];
+// Mała karta: bez wysokości schematu (dotyczy tylko dużej karty).
+const EC_SCHEMA_MINI = EC_SCHEMA.map((sec, i) => (i === 0
+  ? Object.assign({}, sec, { title: 'Ogólne (mała karta statusu)', schema: sec.schema.filter((f) => f.name !== 'max_wysokosc') })
+  : sec));
 const EC_GENERAL_KEYS = ['device_id', 'nazwa', 'motyw', 'tylko_podglad', 'max_wysokosc', 'alarm_prefix'];
 
 async function ecEnsureForm() {
@@ -782,7 +786,7 @@ class EsterownikPelloCardEditor extends HTMLElement {
       this.appendChild(this._form);
     }
     this._form.hass = this._hass;
-    this._form.schema = EC_SCHEMA;
+    this._form.schema = this.mini ? EC_SCHEMA_MINI : EC_SCHEMA;
     this._form.data = this._data();
   }
   _changed(v) {
@@ -793,6 +797,7 @@ class EsterownikPelloCardEditor extends HTMLElement {
       if (val === undefined || val === '' || val === null) delete cfg[k]; else cfg[k] = val;
     }
     if (cfg.motyw === 'auto') delete cfg.motyw;
+    if (this.mini) delete cfg.max_wysokosc;
     if (cfg.alarm_prefix === EC_ALARM_PREFIX) delete cfg.alarm_prefix;
     if (!cfg.tylko_podglad) cfg.tylko_podglad = false;
     const devChanged = (v.device_id || undefined) !== (this._cfg.device_id || undefined);
