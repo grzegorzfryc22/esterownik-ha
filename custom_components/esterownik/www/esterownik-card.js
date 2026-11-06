@@ -107,6 +107,13 @@ function ecFindDevice(hass) {
   for (const id of Object.keys(ents)) { const e = ents[id]; if (e && e.platform === 'esterownik' && e.device_id) return e.device_id; }
   return undefined;
 }
+function ecMaxH(v) {
+  if (v === undefined || v === null || v === '') return '';
+  let t = String(v).trim();
+  if (/^\d+(\.\d+)?$/.test(t)) t += 'px';
+  const ok = window.CSS && CSS.supports ? CSS.supports('max-height', t) : /^[\d.]+(px|vh|em|rem|%)$/.test(t);
+  return ok ? '--ec-max-h:' + t.replace(/[";<>]/g, '') : '';
+}
 const ecEsc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 class EsterownikBase extends HTMLElement {
@@ -401,7 +408,7 @@ class EsterownikPelloCard extends EsterownikBase {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     const ro = this._cfg.tylko_podglad ? '<span class="ro">tryb podglądu</span>' : '';
     this.shadowRoot.innerHTML = `<style>${EC_CSS}</style>
-<ha-card class="${this._themeClass()}" style="${this._cfg.max_wysokosc ? '--ec-max-h:' + ecEsc(this._cfg.max_wysokosc) : ''}">
+<ha-card class="${this._themeClass()}" style="${ecMaxH(this._cfg.max_wysokosc)}">
   <div class="hdr"><span class="name">${ecEsc(this._cfg.nazwa)}</span><span class="chip" id="chip">—</span>${ro}</div>
   <button class="alarm" id="alarm"></button>
   ${EC_SVG}
@@ -672,7 +679,7 @@ const EC_SEL = {
   circ: { entity: { domain: ['switch', 'binary_sensor', 'input_boolean', 'fan', 'light'] } },
 };
 const EC_LABELS = {
-  device_id: 'Piec (urządzenie eSterownik) — wypełnia encje automatycznie', nazwa: 'Nazwa na karcie', motyw: 'Motyw', tylko_podglad: 'Tylko podgląd (bez zapisu do pieca)', max_wysokosc: 'Maksymalna wysokość schematu (np. 600px)',
+  device_id: 'Piec (urządzenie eSterownik) — wypełnia encje automatycznie', nazwa: 'Nazwa na karcie', motyw: 'Motyw', tylko_podglad: 'Tylko podgląd (bez zapisu do pieca)', max_wysokosc: 'Maksymalna wysokość schematu (np. 600 lub 60vh)',
   alarm_prefix: 'Prefiks encji alarmów', status: 'Status pracy', tryb_pracy: 'Tryb pracy (Automatyczny/Ręczny)', zima_lato: 'Tryb Zima / Lato', t_zewn: 'Temperatura zewnętrzna', kasuj_alarmy: 'Przycisk kasowania alarmów',
   t_kotla: 'Temperatura kotła', zad_kotla: 'Zadana kotła', t_powrotu: 'Temperatura powrotu', t_spalin: 'Temperatura spalin', reg_pog_kociol: 'Regulator pogodowy kotła', moc: 'Moc palnika', plomien: 'Płomień',
   poziom: 'Poziom paliwa', czas_do_oproznienia: 'Czas do opróżnienia zasobnika', kolejny_zasyp: 'Data kolejnego zasypu', strumien: 'Strumień paliwa (kg/h)', rozpalenia: 'Liczba rozpaleń', t_podajnika: 'Temperatura podajnika', podajnik: 'Podajnik (praca)', dmuchawa: 'Dmuchawa (praca)', moc_dmuchawy: 'Moc dmuchawy',
