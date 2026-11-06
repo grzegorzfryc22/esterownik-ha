@@ -218,7 +218,7 @@ ha-card.ciemny{--ec-bg:#1c1c1c;--ec-fg:#e8e8e8;--ec-muted:#a8a8a8;--ec-line:#4a4
 .ro{font-size:11px;color:var(--ec-muted);margin-left:auto}
 .alarm{display:none;margin:10px 16px 0;padding:8px 12px;border-radius:8px;border:1px solid #c0392b;background:#fdecea;color:#8e1b12;font-size:13px;cursor:pointer;width:calc(100% - 32px);text-align:left;font:inherit;box-sizing:border-box}
 .alarm.show{display:block}
-svg{display:block;width:100%;height:auto;max-height:var(--ec-max-h,calc(100vh - 160px));margin:0 auto}
+svg{display:block;width:100%;height:auto;max-height:var(--ec-max-h,var(--ec-auto-h,calc(100vh - 160px)));margin:0 auto}
 .more{cursor:pointer}.more:hover rect,.more:focus-visible rect{stroke:#2a9be0;stroke-width:2}.more:hover circle{stroke-width:4}
 .iv{border:none;background:transparent;color:var(--ec-fg);font:inherit;font-size:13px;padding:0;text-align:right;cursor:pointer}.iv:hover{color:#2a9be0}
 svg text{fill:var(--ec-fg);font-size:13px;font-family:inherit}
@@ -403,6 +403,21 @@ class EsterownikPelloCard extends EsterownikBase {
   get hass() { return this._hass; }
   getCardSize() { return 10; }
   getGridOptions() { return { columns: 'full', min_columns: 12, rows: 'auto' }; }
+  connectedCallback() {
+    if (!this._onResize) this._onResize = () => this._fitHeight();
+    window.addEventListener('resize', this._onResize);
+    requestAnimationFrame(() => requestAnimationFrame(() => this._fitHeight()));
+  }
+  disconnectedCallback() { if (this._onResize) window.removeEventListener('resize', this._onResize); }
+  _fitHeight() {
+    // Schemat wypełnia miejsce do dołu ekranu (np. gdy nad nim jest mała karta).
+    const card = this.shadowRoot && this.shadowRoot.querySelector('ha-card');
+    if (!card || !this._svg) return;
+    const top = this._svg.getBoundingClientRect().top;
+    const vh = window.innerHeight;
+    if (top <= 0 || top > vh * 0.6) { card.style.removeProperty('--ec-auto-h'); return; }
+    card.style.setProperty('--ec-auto-h', Math.max(320, Math.floor(vh - top - 16)) + 'px');
+  }
 
   _build() {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
@@ -427,6 +442,7 @@ class EsterownikPelloCard extends EsterownikBase {
     root.getElementById('alarm').addEventListener('click', () => this._open('alarmy'));
     root.getElementById('wrap').addEventListener('click', (ev) => { if (ev.target.id === 'wrap') this._close(); });
     this._built = true;
+    requestAnimationFrame(() => this._fitHeight());
   }
 
   _moreInfo(k) {
