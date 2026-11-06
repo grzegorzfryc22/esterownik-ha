@@ -10,7 +10,9 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 
+from .card import async_register_card
 from .catalog import build_specs
 from .const import ATTR_AMOUNT, ATTR_CONFIG_ENTRY_ID, DOMAIN, MAIN_VID, SERVICE_ADD_FUEL
 from .coordinator import EsterownikConfigEntry, EsterownikCoordinator
@@ -64,6 +66,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await coordinator.async_write("add_fuel", str(amount))
 
     hass.services.async_register(DOMAIN, SERVICE_ADD_FUEL, _async_add_fuel, ADD_FUEL_SCHEMA)
+
+    integration = await async_get_integration(hass, DOMAIN)
+    await async_register_card(hass, str(integration.version or "0"))
     return True
 
 

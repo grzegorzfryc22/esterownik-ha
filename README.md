@@ -40,6 +40,45 @@ sterownika w Twojej sieci. Nie potrzebuje chmury, konta w aplikacji ani internet
 | 🚨 **Alarmy** | każdy alarm sterownika jako osobna encja + przycisk „Potwierdzenie alarmów” |
 | ⚙️ **Wyjścia i wejścia** | pompy, podajnik, dmuchawa, zawór, termostaty |
 | 📊 **Wykresy** | statystyki długoterminowe dla pomiarów — gotowe do kart historii i wykresów |
+| 🖼️ **Karta schematu** | wbudowana karta kotłowni z podglądem i sterowaniem (Pello) — [zobacz](#️-karta-schematu-kotłowni-pello) |
+
+## 🖼️ Karta schematu kotłowni (Pello)
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/grzegorzfryc22/esterownik-ha/main/docs/karta-pello.png" alt="Karta schematu kotłowni Pello" width="820">
+</p>
+
+Integracja ma wbudowaną kartę pulpitu w stylu dawnego podglądu sterownika: zasobnik
+z poziomem pelletu, podajnik, kocioł z płomieniem, zawór 4D, obieg CO z grzejnikiem
+i bojler CWU. Pompy i dmuchawa pokazują stan ON/OFF, a rury „płyną”, gdy pompy pracują.
+**Nie trzeba niczego doinstalowywać** — karta jest dostępna od razu po instalacji integracji
+(po aktualizacji odśwież przeglądarkę: Ctrl+Shift+R).
+
+- 📈 **Kliknij temperaturę** — otworzy się okno encji z wykresem historii.
+- 🎛️ **Kliknij nastawę** (zad. kotła, CWU, za zaworem, tryb CWU, Zima/Lato, regulator pogodowy,
+  temperatury pokojowe) — otworzy się okno zmiany. Każdy zapis do pieca trzeba potwierdzić
+  przyciskiem **„Zapisz w piecu”**.
+- 🚨 Aktywne alarmy pokazują się nad schematem, z przyciskiem kasowania.
+- 🔁 Opcjonalna **pompa cyrkulacji** z dowolnej encji (np. gniazdko ZigBee).
+- 🌗 Motyw automatyczny (z Home Assistant), jasny lub ciemny.
+- 📱 Mała karta statusu (`esterownik-pello-mini-card`) — po kliknięciu otwiera pełny schemat.
+
+**Dodanie:** pulpit → **Edytuj** → **Dodaj kartę** → **Esterownik — Pello (schemat)** →
+wybierz piec. Karta sama dobierze encje, także gdy zmieniłeś ich nazwy. W edytorze każdy
+element schematu można podmienić na inną encję.
+
+```yaml
+type: custom:esterownik-pello-card
+device_id: <wybierz piec w edytorze>
+tylko_podglad: false      # true = sam podgląd, bez zapisu do pieca
+motyw: auto               # auto | jasny | ciemny
+# max_wysokosc: 600px     # ogranicza wysokość schematu
+encje:                    # opcjonalnie: własne encje zamiast tych z pieca
+  cyrkulacja: switch.pompa_cyrkulacji
+  t_wewn: sensor.temperatura_salon
+```
+
+> Karta jest na razie dla **Pello**. Widok dla eCoal jest w planach.
 
 ## 🧠 Jak to działa
 
@@ -171,6 +210,9 @@ boiler controllers by ELEKTRO-SYSTEM: **Pello** (pellet boilers) and **eCoal** (
   calibration, installer parameters and manual outputs are never writable.
 - Manual mode stops the burner and is disabled by default.
 - Action `esterownik.add_fuel` registers a refill (kg).
+- Bundled Lovelace card `custom:esterownik-pello-card` (Pello): a boiler-room schematic with live
+  values, history on click and confirmed setpoint changes. Pick the device in the card editor;
+  entities are mapped automatically, even after renaming.
 - Tested with Pello v3.5 and eCoal v4.0. Install from HACS, then add **eSterownik**
   in *Settings → Devices & services* with the controller IP and web login.
 

@@ -22,3 +22,7 @@ DEFAULT_USERNAME: Final = "root"
 SERVICE_ADD_FUEL: Final = "add_fuel"
 ATTR_AMOUNT: Final = "amount"
 ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
+
+# Karta Lovelace serwowana przez integrację.
+CARD_URL_BASE: Final = "/esterownik_card"
+CARD_FILE: Final = "esterownik-card.js"
